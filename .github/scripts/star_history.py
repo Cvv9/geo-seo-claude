@@ -65,15 +65,20 @@ def render_svg(dates, fg, grid, accent, fill_opacity):
     pw, ph = w - ml - mr, h - mt - mb
 
     total = len(dates)
-    t0, t1 = dates[0], dates[-1]
-    span = max((t1 - t0).total_seconds(), 1)
-
-    pts = [(i + 1, d) for i, d in enumerate(dates)]
-    pts = sample(pts, MAX_POINTS)
-    xy = [
-        (ml + pw * (d - t0).total_seconds() / span, mt + ph * (1 - count / total))
-        for count, d in pts
-    ]
+    if dates:
+        t0, t1 = dates[0], dates[-1]
+        span = max((t1 - t0).total_seconds(), 1)
+        pts = sample([(i + 1, d) for i, d in enumerate(dates)], MAX_POINTS)
+        xy = [
+            (ml + pw * (d - t0).total_seconds() / span, mt + ph * (1 - count / total))
+            for count, d in pts
+        ]
+    else:
+        # A new fork can legitimately have zero stargazers. Publish a valid
+        # zero-count chart so the Pages workflow does not fail before its
+        # first star arrives.
+        t0 = t1 = dt.datetime.now(dt.timezone.utc)
+        xy = [(ml, mt + ph)]
     path = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in xy)
     area = path + f" L{xy[-1][0]:.1f},{mt + ph} L{xy[0][0]:.1f},{mt + ph} Z"
 
@@ -112,15 +117,13 @@ def main():
     if not TOKEN:
         sys.exit("GITHUB_TOKEN is not set")
     dates = fetch_star_dates()
-    if not dates:
-        sys.exit("No stargazer data returned")
     os.makedirs(OUT_DIR, exist_ok=True)
     variants = {
         "star-history.svg": ("#24292f", "#d0d7de", "#e3a008", "0.12"),
         "star-history-dark.svg": ("#e6edf3", "#30363d", "#e3b341", "0.15"),
     }
     for name, (fg, grid, accent, op) in variants.items():
-        with open(os.path.join(OUT_DIR, name), "w") as f:
+        with open(os.path.join(OUT_DIR, name), "w", encoding="utf-8") as f:
             f.write(render_svg(dates, fg, grid, accent, op))
     print(f"Rendered {len(variants)} SVGs from {len(dates):,} stars")
 
