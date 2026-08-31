@@ -21,6 +21,7 @@ jobs:
       - name: Generate SVGs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STAR_REPO: Cvv9/geo-seo-claude
         run: python3 .github/scripts/star_history.py
 
       - name: Publish SVGs to gh-pages
