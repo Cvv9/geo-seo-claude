@@ -15,7 +15,7 @@
 
 ## Star History
 
-<a href="https://www.star-history.com/#zubair-trabzada/geo-seo-claude&Date">
+<a href="https://www.star-history.com/#Cvv9/geo-seo-claude&Date">
   <picture>
     <source
       media="(prefers-color-scheme: dark)"

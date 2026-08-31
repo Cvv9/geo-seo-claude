@@ -64,6 +64,10 @@ class TestStarHistoryPublishing(unittest.TestCase):
         self.assertIn("git push origin gh-pages", workflow)
         self.assertIn("/tmp/star-history.svg", workflow)
         self.assertIn("/tmp/star-history-dark.svg", workflow)
+        self.assertIn("STAR_REPO: Cvv9/geo-seo-claude", workflow)
+        self.assertIn(
+            "https://www.star-history.com/#Cvv9/geo-seo-claude&Date", readme
+        )
         self.assertIn(
             "https://cvv9.github.io/geo-seo-claude/star-history.svg", readme
         )
