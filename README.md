@@ -17,8 +17,12 @@
 
 <a href="https://www.star-history.com/#zubair-trabzada/geo-seo-claude&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/star-history-dark.svg">
-    <img alt="Star History Chart" src="assets/star-history.svg">
+    <source
+      media="(prefers-color-scheme: dark)"
+      srcset="https://cvv9.github.io/geo-seo-claude/star-history-dark.svg">
+    <img
+      alt="Star History Chart"
+      src="https://cvv9.github.io/geo-seo-claude/star-history.svg">
   </picture>
 </a>
 

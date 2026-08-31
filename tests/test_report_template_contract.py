@@ -50,3 +50,24 @@ class TestReportTemplateClientIsolation(unittest.TestCase):
             with self.subTest(metadata_field=metadata_field):
                 self.assertIn(f"$if({metadata_field})$", template)
 
+
+class TestStarHistoryPublishing(unittest.TestCase):
+    """The chart must be published from this fork's GitHub Pages site."""
+
+    def test_workflow_publishes_to_gh_pages_and_readme_uses_fork_urls(self):
+        workflow = (REPOSITORY / ".github" / "workflows" / "star-history.yml").read_text(
+            encoding="utf-8"
+        )
+        readme = (REPOSITORY / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("git switch --orphan gh-pages", workflow)
+        self.assertIn("git push origin gh-pages", workflow)
+        self.assertIn("/tmp/star-history.svg", workflow)
+        self.assertIn("/tmp/star-history-dark.svg", workflow)
+        self.assertIn(
+            "https://cvv9.github.io/geo-seo-claude/star-history.svg", readme
+        )
+        self.assertIn(
+            "https://cvv9.github.io/geo-seo-claude/star-history-dark.svg", readme
+        )
+        self.assertNotIn("zubair-trabzada.github.io", readme)
