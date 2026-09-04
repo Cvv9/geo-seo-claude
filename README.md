@@ -110,6 +110,14 @@ Open Claude Code and use these commands:
 | `/geo content <url>` | Content quality & E-E-A-T assessment |
 | `/geo report <url>` | Generate client-ready GEO report |
 | `/geo report-pdf` | Generate professional PDF report with charts & visualizations |
+| `/geo prospect <cmd>` | Manage prospects through the CRM-lite sales pipeline |
+| `/geo proposal <domain>` | Generate a proposal from saved audit data |
+| `/geo compare <domain>` | Produce a monthly score-improvement report |
+| `/geo update` | Pull the latest GEO skill updates from upstream |
+
+`/geo page` appears in the orchestrator's quick-reference table, but no
+`skills/geo-page/SKILL.md` implementation exists. It is therefore not an
+available command in this release.
 
 ---
 
@@ -119,7 +127,7 @@ Open Claude Code and use these commands:
 geo-seo-claude/
 ├── geo/                          # Main skill orchestrator
 │   └── SKILL.md                  # Primary skill file with commands & routing
-├── skills/                       # 13 specialized sub-skills
+├── skills/                       # 15 specialized sub-skills
 │   ├── geo-audit/                # Full audit orchestration & scoring
 │   ├── geo-citability/           # AI citation readiness scoring
 │   ├── geo-crawlers/             # AI crawler access analysis
@@ -133,6 +141,7 @@ geo-seo-claude/
 │   ├── geo-report-pdf/           # Professional PDF report with charts
 │   ├── geo-prospect/             # CRM-lite prospect pipeline management
 │   ├── geo-proposal/             # Auto-generate client proposals
+│   ├── geo-update/               # Pull the latest GEO skill updates
 │   └── geo-compare/              # Monthly delta tracking & progress reports
 ├── agents/                       # 5 parallel subagents
 │   ├── geo-ai-visibility.md      # GEO audit, citability, crawlers, brands
