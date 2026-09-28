@@ -2,11 +2,11 @@
 
 import importlib.util
 import io
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
-from urllib.error import HTTPError
 
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / ".github" / "scripts" / "star_history.py"
@@ -35,20 +35,29 @@ class TestZeroStarHistory(TestCase):
 
 
 class TestStargazerAccess(TestCase):
-    def test_403_with_actions_token_retries_public_endpoint(self):
+    def test_weekly_history_expands_to_chronological_daily_star_points(self):
+        history = [
+            {"week": 1_704_672_000, "total": 2, "days": [0, 1, 0, 1, 0, 0, 0]},
+            {"week": 1_704_067_200, "total": 1, "days": [1, 0, 0, 0, 0, 0, 0]},
+        ]
         requests = []
 
         def urlopen(request, timeout):
             requests.append(request)
-            if len(requests) == 1:
-                raise HTTPError(request.full_url, 403, "Forbidden", None, None)
-            return io.BytesIO(b"[]")
+            return io.BytesIO(json.dumps(history).encode("utf-8"))
 
         with (
-            patch.object(star_history, "TOKEN", "actions-token"),
+            patch.object(star_history, "TOKEN", "read-only-token"),
             patch.object(star_history.urllib.request, "urlopen", side_effect=urlopen),
         ):
-            self.assertEqual(star_history.fetch_page(1), [])
+            dates = star_history.fetch_star_dates()
 
-        self.assertEqual(requests[0].get_header("Authorization"), "Bearer actions-token")
-        self.assertIsNone(requests[1].get_header("Authorization"))
+        self.assertEqual(len(dates), 3)
+        self.assertEqual(dates, sorted(dates))
+        self.assertIn("/stargazers/history?", requests[0].full_url)
+        self.assertEqual(
+            requests[0].get_header("X-github-api-version"), "2026-03-10"
+        )
+        self.assertEqual(
+            requests[0].get_header("Accept"), "application/vnd.github+json"
+        )
