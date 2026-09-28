@@ -12,65 +12,48 @@ import datetime as dt
 import json
 import os
 import sys
-import urllib.error
 import urllib.request
 
 REPO = os.environ.get("STAR_REPO", "zubair-trabzada/geo-seo-claude")
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "assets")
-PER_PAGE = 100
+PER_PAGE = 30
 MAX_POINTS = 240  # sampled points in the rendered path
 
 
-def stargazers_request(page, authenticated=True):
-    headers = {
-        "Accept": "application/vnd.github.star+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "star-history-generator",
-    }
-    if authenticated and TOKEN:
-        headers["Authorization"] = f"Bearer {TOKEN}"
-
-    return urllib.request.Request(
-        f"https://api.github.com/repos/{REPO}/stargazers?per_page={PER_PAGE}&page={page}",
-        headers=headers,
+def fetch_page(page):
+    req = urllib.request.Request(
+        f"https://api.github.com/repos/{REPO}/stargazers/history?per_page={PER_PAGE}&page={page}",
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {TOKEN}",
+            "X-GitHub-Api-Version": "2026-03-10",
+            "User-Agent": "star-history-generator",
+        },
     )
-
-
-def fetch_response(req):
     with urllib.request.urlopen(req, timeout=30) as resp:
         return json.load(resp)
 
 
-def fetch_page(page):
-    try:
-        return fetch_response(stargazers_request(page))
-    except urllib.error.HTTPError as exc:
-        if exc.code != 403 or not TOKEN:
-            raise
-
-        # This public endpoint may reject a repository Actions token even when
-        # the workflow has read-only repository access. Retry without sending
-        # credentials instead of broadening the workflow token's permissions.
-        print("Stargazers API rejected the token; retrying without credentials.", file=sys.stderr)
-        return fetch_response(stargazers_request(page, authenticated=False))
-
-
 def fetch_star_dates():
-    dates, page = [], 1
+    weeks, page = [], 1
     while True:
         batch = fetch_page(page)
         if not batch:
             break
-        dates.extend(
-            dt.datetime.fromisoformat(s["starred_at"].replace("Z", "+00:00"))
-            for s in batch
-            if s.get("starred_at")
-        )
+        weeks.extend(batch)
         if len(batch) < PER_PAGE:
             break
         page += 1
-    return sorted(dates)
+    dates = []
+    # GitHub returns newest weeks first. Each daily count is expanded at the
+    # documented week/day boundary so the existing cumulative renderer keeps
+    # its chart semantics without needing individual stargazer identities.
+    for week in reversed(weeks):
+        week_start = dt.datetime.fromtimestamp(week["week"], tz=dt.timezone.utc)
+        for day_offset, count in enumerate(week["days"]):
+            dates.extend([week_start + dt.timedelta(days=day_offset)] * count)
+    return dates
 
 
 def sample(points, limit):
