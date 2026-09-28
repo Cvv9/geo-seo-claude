@@ -12,6 +12,7 @@ import datetime as dt
 import json
 import os
 import sys
+import urllib.error
 import urllib.request
 
 REPO = os.environ.get("STAR_REPO", "zubair-trabzada/geo-seo-claude")
@@ -21,18 +22,38 @@ PER_PAGE = 100
 MAX_POINTS = 240  # sampled points in the rendered path
 
 
-def fetch_page(page):
-    req = urllib.request.Request(
+def stargazers_request(page, authenticated=True):
+    headers = {
+        "Accept": "application/vnd.github.star+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "star-history-generator",
+    }
+    if authenticated and TOKEN:
+        headers["Authorization"] = f"Bearer {TOKEN}"
+
+    return urllib.request.Request(
         f"https://api.github.com/repos/{REPO}/stargazers?per_page={PER_PAGE}&page={page}",
-        headers={
-            "Accept": "application/vnd.github.star+json",
-            "Authorization": f"Bearer {TOKEN}",
-            "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "star-history-generator",
-        },
+        headers=headers,
     )
+
+
+def fetch_response(req):
     with urllib.request.urlopen(req, timeout=30) as resp:
         return json.load(resp)
+
+
+def fetch_page(page):
+    try:
+        return fetch_response(stargazers_request(page))
+    except urllib.error.HTTPError as exc:
+        if exc.code != 403 or not TOKEN:
+            raise
+
+        # This public endpoint may reject a repository Actions token even when
+        # the workflow has read-only repository access. Retry without sending
+        # credentials instead of broadening the workflow token's permissions.
+        print("Stargazers API rejected the token; retrying without credentials.", file=sys.stderr)
+        return fetch_response(stargazers_request(page, authenticated=False))
 
 
 def fetch_star_dates():
