@@ -6,7 +6,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # This repository's stargazer timestamps request needs the same token scope
+  # as the previously successful scheduled publisher.
+  contents: write
   pages: write
   id-token: write
 
