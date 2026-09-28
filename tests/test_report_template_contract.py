@@ -60,6 +60,7 @@ class TestStarHistoryPublishing(unittest.TestCase):
         )
         readme = (REPOSITORY / "README.md").read_text(encoding="utf-8")
 
+        self.assertIn("contents: write", workflow)
         self.assertIn("pages: write", workflow)
         self.assertIn("id-token: write", workflow)
         self.assertIn("actions/configure-pages@v5", workflow)
