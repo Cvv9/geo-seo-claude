@@ -54,16 +54,23 @@ class TestReportTemplateClientIsolation(unittest.TestCase):
 class TestStarHistoryPublishing(unittest.TestCase):
     """The chart must be published from this fork's GitHub Pages site."""
 
-    def test_workflow_publishes_to_gh_pages_and_readme_uses_fork_urls(self):
+    def test_workflow_deploys_pages_artifact_and_readme_uses_fork_urls(self):
         workflow = (REPOSITORY / ".github" / "workflows" / "star-history.yml").read_text(
             encoding="utf-8"
         )
         readme = (REPOSITORY / "README.md").read_text(encoding="utf-8")
 
-        self.assertIn("git switch --orphan gh-pages", workflow)
-        self.assertIn("git push origin gh-pages", workflow)
-        self.assertIn("/tmp/star-history.svg", workflow)
-        self.assertIn("/tmp/star-history-dark.svg", workflow)
+        self.assertIn("pages: write", workflow)
+        self.assertIn("id-token: write", workflow)
+        self.assertIn("actions/configure-pages@v5", workflow)
+        self.assertIn("actions/upload-pages-artifact@v3", workflow)
+        self.assertIn("actions/deploy-pages@v4", workflow)
+        self.assertIn("cp assets/star-history.svg _site/star-history.svg", workflow)
+        self.assertIn(
+            "cp assets/star-history-dark.svg _site/star-history-dark.svg", workflow
+        )
+        self.assertIn("path: _site", workflow)
+        self.assertNotIn("git push origin gh-pages", workflow)
         self.assertIn("STAR_REPO: Cvv9/geo-seo-claude", workflow)
         self.assertIn(
             "https://www.star-history.com/#Cvv9/geo-seo-claude&Date", readme
